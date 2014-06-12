@@ -9,11 +9,8 @@ var mainPage *template.Template
 
 type Page struct {
 	Title   string
+	User    *User
 	Content interface{}
-}
-
-type User struct {
-	Name string
 }
 
 func init() {
@@ -21,19 +18,23 @@ func init() {
 	mainPage = template.Must(layout.Clone())
 	mainPage = template.Must(mainPage.ParseFiles("views/main.html"))
 
-	http.HandleFunc("/", rootHandler)
+	http.Handle("/", handler(rootHandler))
+	http.Handle("/disconnect", handler(disconnectHandler))
 }
 
-func main() {
-	err := http.ListenAndServe(":8181", nil)
-	if err != nil {
-		panic(err)
+func rootHandler(w http.ResponseWriter, r *http.Request, c Context) (err error) {
+	if c.u == nil {
+		// redirect to login?
 	}
-}
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
+	c.u = &User{Name: "Tom"}
 	mainPage.Execute(w, Page{
 		Title:   "Welcome",
-		Content: User{Name: "Tom"},
+		User:    c.u,
+		Content: User{Name: c.u.Name},
 	})
+	return nil
+}
+
+func disconnectHandler(w http.ResponseWriter, r *http.Request, c Context) (err error) {
+	return nil
 }
